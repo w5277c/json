@@ -67,8 +67,8 @@ public class JArray extends JObject {
 				jitems.add(jobj);
 			}
 
-			if(c == NEW_LINE) {
-				c = skip(br, NEW_LINE);
+			if(c == SPACE || c == TAB || c == '\r' || c == '\n') {
+				c = skip(br, SPACE, TAB, '\r', '\n');
 			}
 
 			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {
@@ -78,7 +78,7 @@ public class JArray extends JObject {
 				break;
 			}
 			if(COMMA != c) {
-				throw new ParseException("Expected comma");
+				throw new ParseException("Expected comma, got:" + c);
 			}
 		}
 	}

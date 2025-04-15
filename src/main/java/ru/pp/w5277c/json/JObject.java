@@ -215,7 +215,7 @@ public class JObject {
 				break;
 			}
 			if(COMMA != c) {
-				throw new ParseException("Expected comma");
+				throw new ParseException("Expected comma, got:" + c);
 			}
 		}
 	}

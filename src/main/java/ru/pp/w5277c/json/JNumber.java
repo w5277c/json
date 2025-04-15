@@ -21,7 +21,7 @@ public class JNumber extends JObject {
 
 	public JNumber(String id, Object value) {
 		super(id);
-		this.value = null == value ? "null" : this.value.toString();
+		this.value = null == value ? "null" : value.toString();
 	}
 	public JNumber(String id, Long value) {
 		super(id);

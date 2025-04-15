@@ -8,6 +8,7 @@
 --------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 package ru.pp.w5277c.json;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
@@ -18,6 +19,10 @@ public class JNumber extends JObject {
 		super(id);
 	}
 
+	public JNumber(String id, Object value) {
+		super(id);
+		this.value = null == value ? "null" : this.value.toString();
+	}
 	public JNumber(String id, Long value) {
 		super(id);
 		this.value = null == value ? "null" : Long.toString(value);
@@ -49,28 +54,10 @@ public class JNumber extends JObject {
 		}
 	}
 
-	public char parse(InputStreamReader isr, char c) throws Exception {
+	public char parse(BufferedReader br, char c) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		sb.append(c);
-		char _c = read(isr, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
-		try {
-			if("null".equals(sb.toString())) {
-				value = "null";
-			}
-			else {
-				Double.parseDouble(sb.toString());
-				value = sb.toString();
-			}
-		}
-		catch(Exception ex) {
-			throw new ParseException("Incorrect value:" + sb.toString());
-		}
-		return _c;
-	}
-	public char parse(InputStream is, char c) throws Exception {
-		StringBuilder sb = new StringBuilder();
-		sb.append(c);
-		char ch = read(is, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
+		char ch = read(br, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
 		try {
 			if("null".equals(sb.toString())) {
 				value = "null";

@@ -15,11 +15,10 @@
 
 package ru.pp.w5277c.json;
 
-import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -38,6 +37,7 @@ public class JObject {
 	public		static	final	char				COMMA				= ',';
 	public		static	final	char				QUOT_MARK			= '\"';
 	public		static	final	char				SPACE				= ' ';
+	public		static	final	char				TAB					= '\t';
 	public		static	final	char				NEW_LINE			= '\n';
 	public		static	final	String				NULL				= "null";
 
@@ -104,145 +104,58 @@ public class JObject {
 		this.id = id;
 	}
 
-	public static InputStream str2stream(String str) throws UnsupportedEncodingException {
-		return new ByteArrayInputStream(str.getBytes("UTF-8"));
+	public static BufferedReader str2stream(String str) throws UnsupportedEncodingException {
+		return new BufferedReader(new StringReader(str));
 	}
 
-	public JObject(InputStream is) throws Exception {
-		char c = skip(is, SPACE);
+	public JObject(BufferedReader br) throws Exception {
+		char c = skip(br, SPACE, TAB, '\r', '\n');
 		if(OPEN_BRACKET != c) {
 			throw new ParseException("Missing open bracket, got:" + Short2Hex(c) + ":'" + c + "'");
 		}
 		long tmp = System.currentTimeMillis();
-		parse(is);
+		parse(br);
 		parseTime = System.currentTimeMillis() - tmp;
 	}
 
-	public JObject(InputStreamReader isr) throws Exception {
-		char c = skip(isr, SPACE);
-		if(65535 == c) {
-			throw new UnexpectedEndException();
-		}
-		else if(OPEN_BRACKET != c) {
-			throw new ParseException("Missing open bracket, got:" + Short2Hex(c) + ":'" + c + "'");
-		}
-		long tmp = System.currentTimeMillis();
-		parse(isr);
-		parseTime = System.currentTimeMillis() - tmp;
-	}
-
-	public boolean add(JObject ...jobjects) {
-		boolean changed = false;
+	public JObject add(JObject ...jobjects) {
 		for(JObject jobj : jobjects) {
-			changed |= jitems.add(jobj);
+			jitems.add(jobj);
 			if(null != jobj.getId()) {
 				indexes.put(jobj.getId(), jobj);
 			}
 		}
-		return changed;
+		return this;
 	}
-
-	protected void parse(InputStreamReader isr) throws Exception {
-		while(true) {
-			char c = skip(isr, SPACE);
-			if(c == NEW_LINE) {
-				c = skip(isr, NEW_LINE);
-			}
-			String subObjectId = null;
-			if(QUOT_MARK == c) {
-				StringBuilder sb = new StringBuilder();
-				readStr(isr, sb);
-				subObjectId = sb.toString();
-				c = skip(isr, SPACE);
-				if(DELIMETER != c) {
-					throw new ParseException("Missing delimeter");
-				}
-				c = skip(isr, SPACE);
-			}
-			if(c == NEW_LINE) {
-				c = skip(isr, NEW_LINE);
-			}
-
-			JObject jobj = null;
-			switch(c) {
-				case CLOSE_BRACKET:
-				case SQ_CLOSE_BRACKET:
-					break;
-				case OPEN_BRACKET:
-					jobj = new JObject(subObjectId);
-					((JObject)jobj).parse(isr);
-					c = (char)isr.read();
-					if(65535 == c) {
-						throw new UnexpectedEndException();
-					}
-					break;
-				case SQ_OPEN_BRACKET:
-					jobj = new JArray(subObjectId);
-					((JArray)jobj).parse(isr);
-					c = (char)isr.read();
-					if(65535 == c) {
-						throw new UnexpectedEndException();
-					}
-					break;
-				case QUOT_MARK:
-					jobj = new JString(subObjectId);
-					((JString)jobj).parse(isr);
-					c = (char)isr.read();
-					if(65535 == c) {
-						throw new UnexpectedEndException();
-					}
-					break;
-				case T:
-				case F:
-					jobj = new JBoolean(subObjectId);
-					c = ((JBoolean)jobj).parse(isr, c);
-					break;
-				default:
-					jobj = new JNumber(subObjectId);
-					c = ((JNumber)jobj).parse(isr, c);
-					break;
-			}
-			if(null != jobj) {
-				jitems.add(jobj);
-				if(null != jobj.getId()) {
-					indexes.put(jobj.getId(), jobj);
-				}
-			}
-
-			if(c == NEW_LINE) {
-				c = skip(isr, NEW_LINE);
-			}
-
-			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {
-				break;
-			}
-			if(this instanceof JObject && CLOSE_BRACKET == c) {
-				break;
-			}
-			if(COMMA != c) {
-				throw new ParseException("Expected comma");
-			}
+	
+	public JObject add(String id, Object value) throws Exception {
+		if(value instanceof String) {
+			return add(new JString(id, (String)value));
 		}
+		if(	value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long || value instanceof Float ||
+			value instanceof Double) {
+			
+			return add(new JNumber(id, value));
+		}
+		if( value instanceof Boolean) {
+			return add(new JBoolean(id, (Boolean)value));
+		}
+		throw new Exception("Unsuported value type for:" + id);
 	}
-	protected void parse(InputStream is) throws Exception {
+
+	protected void parse(BufferedReader br) throws Exception {
 		while(true) {
-			char c = skip(is, SPACE);
-			if(c == NEW_LINE) {
-				c = skip(is, NEW_LINE);
-			}
+			char c = skip(br, SPACE, TAB, '\r', '\n');
 			String subObjectId = null;
 			if(QUOT_MARK == c) {
 				StringBuilder sb = new StringBuilder();
-				readStr(is, sb);
+				readStr(br, sb);
 				subObjectId = sb.toString();
-				c = skip(is, SPACE);
+				c = skip(br, SPACE, TAB, '\r', '\n');
 				if(DELIMETER != c) {
 					throw new ParseException("Missing delimeter");
 				}
-				c = skip(is, SPACE);
-			}
-			if(c == NEW_LINE) {
-				c = skip(is, NEW_LINE);
+				c = skip(br, SPACE, TAB, '\r', '\n');
 			}
 
 			JObject jobj = null;
@@ -252,24 +165,24 @@ public class JObject {
 					break;
 				case OPEN_BRACKET:
 					jobj = new JObject(subObjectId);
-					((JObject)jobj).parse(is);
-					c = (char)is.read();
+					((JObject)jobj).parse(br);
+					c = (char)br.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case SQ_OPEN_BRACKET:
 					jobj = new JArray(subObjectId);
-					((JArray)jobj).parse(is);
-					c = (char)is.read();
+					((JArray)jobj).parse(br);
+					c = (char)br.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case QUOT_MARK:
 					jobj = new JString(subObjectId);
-					((JString)jobj).parse(is);
-					c = (char)is.read();
+					((JString)jobj).parse(br);
+					c = (char)br.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
@@ -277,11 +190,11 @@ public class JObject {
 				case T:
 				case F:
 					jobj = new JBoolean(subObjectId);
-					c = ((JBoolean)jobj).parse(is, c);
+					c = ((JBoolean)jobj).parse(br, c);
 					break;
 				default:
 					jobj = new JNumber(subObjectId);
-					c = ((JNumber)jobj).parse(is, c);
+					c = ((JNumber)jobj).parse(br, c);
 					break;
 			}
 			if(null != jobj) {
@@ -291,8 +204,8 @@ public class JObject {
 				}
 			}
 
-			if(c == NEW_LINE) {
-				c = skip(is, NEW_LINE);
+			if(c == SPACE || c == TAB || c == '\r' || c == '\n') {
+				c = skip(br, SPACE, TAB, '\r', '\n');
 			}
 
 			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {
@@ -380,50 +293,27 @@ public class JObject {
 		return jitems;
 	}
 
-	char skip(InputStreamReader isr, char c) throws Exception {
-		char _c;
-		while(true) {
-			_c = (char)isr.read();
-			if(65535 == _c) {
-				throw new UnexpectedEndException();
-			}
-			if(c != _c) {
-				break;
-			}
-		}
-		return _c;
-	}
-	char skip(InputStream is, char c) throws Exception {
+	char skip(BufferedReader br, char... chars) throws Exception {
 		int tmp;
-		while((tmp = is.read()) != -1) {
+		while((tmp = br.read()) != -1) {
 			char _c = (char)tmp;
-			if(c != _c) {
+			boolean exist = false;
+			for(char c : chars) {
+				if(c == _c) {
+					exist = true;
+					break;
+				}
+			}
+			if(!exist) {
 				return _c;
 			}
 		}
 		throw new UnexpectedEndException();
 	}
 
-	protected char read(InputStreamReader isr, StringBuilder sb, char... stopChs) throws Exception {
-		char c;
-l1:
-		while(true) {
-			c = (char)isr.read();
-			if(65535 == c) {
-				throw new UnexpectedEndException();
-			}
-			for(char stopCh : stopChs) {
-				if(stopCh == c) {
-					break l1;
-				}
-			}
-			sb.append(c);
-		}
-		return c;
-	}
-	protected char read(InputStream is, StringBuilder sb, char... stopChs) throws Exception {
+	protected char read(BufferedReader br, StringBuilder sb, char... stopChs) throws Exception {
 		int tmp;
-		while((tmp = is.read()) != -1) {
+		while((tmp = br.read()) != -1) {
 			char c = (char)tmp;
 			for(char stopCh : stopChs) {
 				if(stopCh == c) {
@@ -435,48 +325,15 @@ l1:
 		throw new UnexpectedEndException();
 	}
 
-	protected char readStr(InputStreamReader isr, StringBuilder sb) throws Exception {
-		char lastCh = 0x00;
-		char c;
-		while(true) {
-			c = (char)isr.read();
-			if(65535 == c) {
-				throw new UnexpectedEndException();
-			}
-			if(null != ei) {
-				if('\\' == lastCh) {
-					if('u' == c) {
-						c = (char)Long.parseLong("" + (char)isr.read() + (char)isr.read() + (char)isr.read() + (char)isr.read(), 0x10);
-					}
-					else {
-						c = ei.unescape(c);
-					}
-					lastCh = c;
-					sb.append(c);
-					continue;
-				}
-				else if('\\' == c) {
-					lastCh = c;
-					continue;
-				}
-			}				
-			if(QUOT_MARK == c) {
-				break;
-			}
-			lastCh = c;
-			sb.append(c);
-		}
-		return c;
-	}
-	protected char readStr(InputStream is, StringBuilder sb) throws Exception {
+	protected char readStr(BufferedReader br, StringBuilder sb) throws Exception {
 		char lastCh = 0x00;
 		int tmp;
-		while((tmp = is.read()) != -1) {
+		while((tmp = br.read()) != -1) {
 			char c = (char)tmp;
 			if(null != ei) {
 				if('\\' == lastCh) {
 					if('u' == c) {
-						c = (char)Long.parseLong("" + (char)is.read() + (char)is.read() + (char)is.read() + (char)is.read(), 0x10);
+						c = (char)Long.parseLong("" + (char)br.read() + (char)br.read() + (char)br.read() + (char)br.read(), 0x10);
 					}
 					else {
 						c = ei.unescape(c);

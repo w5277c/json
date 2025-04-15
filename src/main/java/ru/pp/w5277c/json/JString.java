@@ -10,6 +10,7 @@
 --------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 package ru.pp.w5277c.json;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -45,16 +46,10 @@ public class JString extends JObject {
 	}
 
 	@Override
-	public void parse(InputStreamReader isr) throws Exception {
-		StringBuilder sb = new StringBuilder();
-		readStr(isr, sb);
-		value = sb.toString();
-	}
-	@Override
-	public void parse(InputStream is) throws Exception {
+	public void parse(BufferedReader br) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		while(true) {
-			readStr(is, sb);
+			readStr(br, sb);
 			if(sb.length()<0x02) {
 				break;
 			}

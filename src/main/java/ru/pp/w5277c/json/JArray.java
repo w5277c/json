@@ -7,23 +7,22 @@
 --------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 package ru.pp.w5277c.json;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 public class JArray extends JObject {
+	public JArray() {
+		super();
+	}
 	public JArray(String id) {
 		super(id);
 	}
 
 	@Override
-	protected void parse(InputStreamReader isr) throws Exception {
+	protected void parse(BufferedReader br) throws Exception {
 		while(true) {
-			char c = skip(isr, SPACE);
-			if(c == NEW_LINE) {
-				c = skip(isr, NEW_LINE);
-			}
+			char c = skip(br, SPACE, TAB, '\r', '\n');
 
 			JObject jobj = null;
 			switch(c) {
@@ -32,24 +31,24 @@ public class JArray extends JObject {
 					break;
 				case OPEN_BRACKET:
 					jobj = new JObject();
-					((JObject)jobj).parse(isr);
-					c = (char)isr.read();
+					((JObject)jobj).parse(br);
+					c = (char)br.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case SQ_OPEN_BRACKET:
 					jobj = new JArray((String)null);
-					((JArray)jobj).parse(isr);
-					c = (char)isr.read();
+					((JArray)jobj).parse(br);
+					c = (char)br.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case QUOT_MARK:
 					jobj = new JString((String)null);
-					((JString)jobj).parse(isr);
-					c = (char)isr.read();
+					((JString)jobj).parse(br);
+					c = (char)br.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
@@ -57,11 +56,11 @@ public class JArray extends JObject {
 				case T:
 				case F:
 					jobj = new JBoolean((String)null);
-					c = ((JBoolean)jobj).parse(isr, c);
+					c = ((JBoolean)jobj).parse(br, c);
 					break;
 				default:
 					jobj = new JNumber((String)null);
-					c = ((JNumber)jobj).parse(isr, c);
+					c = ((JNumber)jobj).parse(br, c);
 					break;
 			}
 			if(null != jobj) {
@@ -69,74 +68,7 @@ public class JArray extends JObject {
 			}
 
 			if(c == NEW_LINE) {
-				c = skip(isr, NEW_LINE);
-			}
-
-			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {
-				break;
-			}
-			if(this instanceof JObject && CLOSE_BRACKET == c) {
-				break;
-			}
-			if(COMMA != c) {
-				throw new ParseException("Expected comma");
-			}
-		}
-	}
-
-	@Override
-	protected void parse(InputStream is) throws Exception {
-		while(true) {
-			char c = skip(is, SPACE);
-			if(c == NEW_LINE) {
-				c = skip(is, NEW_LINE);
-			}
-
-			JObject jobj = null;
-			switch(c) {
-				case CLOSE_BRACKET:
-				case SQ_CLOSE_BRACKET:
-					break;
-				case OPEN_BRACKET:
-					jobj = new JObject();
-					((JObject)jobj).parse(is);
-					c = (char)is.read();
-					if(65535 == c) {
-						throw new UnexpectedEndException();
-					}
-					break;
-				case SQ_OPEN_BRACKET:
-					jobj = new JArray((String)null);
-					((JArray)jobj).parse(is);
-					c = (char)is.read();
-					if(65535 == c) {
-						throw new UnexpectedEndException();
-					}
-					break;
-				case QUOT_MARK:
-					jobj = new JString((String)null);
-					((JString)jobj).parse(is);
-					c = (char)is.read();
-					if(65535 == c) {
-						throw new UnexpectedEndException();
-					}
-					break;
-				case T:
-				case F:
-					jobj = new JBoolean((String)null);
-					c = ((JBoolean)jobj).parse(is, c);
-					break;
-				default:
-					jobj = new JNumber((String)null);
-					c = ((JNumber)jobj).parse(is, c);
-					break;
-			}
-			if(null != jobj) {
-				jitems.add(jobj);
-			}
-
-			if(c == NEW_LINE) {
-				c = skip(is, NEW_LINE);
+				c = skip(br, NEW_LINE);
 			}
 
 			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {

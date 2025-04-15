@@ -8,8 +8,7 @@
 --------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 package ru.pp.w5277c.json;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.BufferedReader;
 
 public class JBoolean extends JObject {
 	JBoolean(String id) {
@@ -21,25 +20,12 @@ public class JBoolean extends JObject {
 		value = isTrue ? TRUE : FALSE;
 	}
 
-	public char parse(InputStreamReader isr, char c) throws Exception {
-		StringBuilder sb = new StringBuilder();
-		sb.append(c);
-		char _c = read(isr, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
-		if(sb.toString().toLowerCase().equals(TRUE) || sb.toString().toLowerCase().equals(FALSE)) {
-			value = sb.toString().toLowerCase();
-		}
-		else {
-			throw new ParseException("Incorrect value:" + sb.toString());
-		}
-		return _c;
-	}
-
-	public char parse(InputStream is, char c) throws Exception {
+	public char parse(BufferedReader is, char c) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		sb.append(c);
 		char _c = read(is, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
-		if(sb.toString().toLowerCase().equals(TRUE) || sb.toString().toLowerCase().equals(FALSE)) {
-			value = sb.toString().toLowerCase();
+		if(sb.toString().trim().toLowerCase().equals(TRUE) || sb.toString().toLowerCase().equals(FALSE)) {
+			value = sb.toString().trim().toLowerCase();
 		}
 		else {
 			throw new ParseException("Incorrect value:" + sb.toString());

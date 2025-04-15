@@ -46,12 +46,12 @@ public class JObject {
 	protected					String				id					= null;
 	protected					String				value;
 
-	private						long				parse_time			= 0;
+	private						long				parseTime			= 0;
 
-	private		static			EscapeInterface		ei						= new EscapeInterface() {
+	private		static			EscapeInterface		ei					= new EscapeInterface() {
 		@Override
-		public char escape(char l_char) {
-			switch(l_char) {
+		public char escape(char c) {
+			switch(c) {
 				case '\t':
 					return 't';
 				case '\b':
@@ -73,8 +73,8 @@ public class JObject {
 		}
 
 		@Override
-		public char unescape(char l_char) {
-			switch(l_char) {
+		public char unescape(char c) {
+			switch(c) {
 				case 't':
 					return '\t';
 				case 'b':
@@ -92,7 +92,7 @@ public class JObject {
 				case '\\':
 					return '\\';
 			}
-			return l_char;
+			return c;
 		}
 	};
 			  
@@ -100,455 +100,455 @@ public class JObject {
 	public JObject() {
 	}
 
-	public JObject(String l_id) {
-		id = l_id;
+	public JObject(String id) {
+		this.id = id;
 	}
 
-	public static InputStream str2stream(String l_str) throws UnsupportedEncodingException {
-		return new ByteArrayInputStream(l_str.getBytes("UTF-8"));
+	public static InputStream str2stream(String str) throws UnsupportedEncodingException {
+		return new ByteArrayInputStream(str.getBytes("UTF-8"));
 	}
 
-	public JObject(InputStream l_is) throws Exception {
-		char ch = skip(l_is, SPACE);
-		if(OPEN_BRACKET != ch) {
-			throw new ParseException("Missing open bracket, got:" + Short2Hex(ch) + ":'" + ch + "'");
+	public JObject(InputStream is) throws Exception {
+		char c = skip(is, SPACE);
+		if(OPEN_BRACKET != c) {
+			throw new ParseException("Missing open bracket, got:" + Short2Hex(c) + ":'" + c + "'");
 		}
 		long tmp = System.currentTimeMillis();
-		parse(l_is);
-		parse_time = System.currentTimeMillis() - tmp;
+		parse(is);
+		parseTime = System.currentTimeMillis() - tmp;
 	}
 
-	public JObject(InputStreamReader l_isr) throws Exception {
-		char ch = skip(l_isr, SPACE);
-		if(65535 == ch) {
+	public JObject(InputStreamReader isr) throws Exception {
+		char c = skip(isr, SPACE);
+		if(65535 == c) {
 			throw new UnexpectedEndException();
 		}
-		else if(OPEN_BRACKET != ch) {
-			throw new ParseException("Missing open bracket, got:" + Short2Hex(ch) + ":'" + ch + "'");
+		else if(OPEN_BRACKET != c) {
+			throw new ParseException("Missing open bracket, got:" + Short2Hex(c) + ":'" + c + "'");
 		}
 		long tmp = System.currentTimeMillis();
-		parse(l_isr);
-		parse_time = System.currentTimeMillis() - tmp;
+		parse(isr);
+		parseTime = System.currentTimeMillis() - tmp;
 	}
 
-	public boolean add(JObject ...l_jobjects) {
+	public boolean add(JObject ...jobjects) {
 		boolean changed = false;
-		for(JObject l_jobj : l_jobjects) {
-			changed |= jitems.add(l_jobj);
-			if(null != l_jobj.get_id()) {
-				indexes.put(l_jobj.get_id(), l_jobj);
+		for(JObject jobj : jobjects) {
+			changed |= jitems.add(jobj);
+			if(null != jobj.getId()) {
+				indexes.put(jobj.getId(), jobj);
 			}
 		}
 		return changed;
 	}
 
-	protected void parse(InputStreamReader l_isr) throws Exception {
+	protected void parse(InputStreamReader isr) throws Exception {
 		while(true) {
-			char ch = skip(l_isr, SPACE);
-			if(ch == NEW_LINE) {
-				ch = skip(l_isr, NEW_LINE);
+			char c = skip(isr, SPACE);
+			if(c == NEW_LINE) {
+				c = skip(isr, NEW_LINE);
 			}
-			String sub_object_id = null;
-			if(QUOT_MARK == ch) {
+			String subObjectId = null;
+			if(QUOT_MARK == c) {
 				StringBuilder sb = new StringBuilder();
-				read_str(l_isr, sb);
-				sub_object_id = sb.toString();
-				ch = skip(l_isr, SPACE);
-				if(DELIMETER != ch) {
+				readStr(isr, sb);
+				subObjectId = sb.toString();
+				c = skip(isr, SPACE);
+				if(DELIMETER != c) {
 					throw new ParseException("Missing delimeter");
 				}
-				ch = skip(l_isr, SPACE);
+				c = skip(isr, SPACE);
 			}
-			if(ch == NEW_LINE) {
-				ch = skip(l_isr, NEW_LINE);
+			if(c == NEW_LINE) {
+				c = skip(isr, NEW_LINE);
 			}
 
 			JObject jobj = null;
-			switch(ch) {
+			switch(c) {
 				case CLOSE_BRACKET:
 				case SQ_CLOSE_BRACKET:
 					break;
 				case OPEN_BRACKET:
-					jobj = new JObject(sub_object_id);
-					((JObject)jobj).parse(l_isr);
-					ch = (char)l_isr.read();
-					if(65535 == ch) {
+					jobj = new JObject(subObjectId);
+					((JObject)jobj).parse(isr);
+					c = (char)isr.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case SQ_OPEN_BRACKET:
-					jobj = new JArray(sub_object_id);
-					((JArray)jobj).parse(l_isr);
-					ch = (char)l_isr.read();
-					if(65535 == ch) {
+					jobj = new JArray(subObjectId);
+					((JArray)jobj).parse(isr);
+					c = (char)isr.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case QUOT_MARK:
-					jobj = new JString(sub_object_id);
-					((JString)jobj).parse(l_isr);
-					ch = (char)l_isr.read();
-					if(65535 == ch) {
+					jobj = new JString(subObjectId);
+					((JString)jobj).parse(isr);
+					c = (char)isr.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case T:
 				case F:
-					jobj = new JBoolean(sub_object_id);
-					ch = ((JBoolean)jobj).parse(l_isr, ch);
+					jobj = new JBoolean(subObjectId);
+					c = ((JBoolean)jobj).parse(isr, c);
 					break;
 				default:
-					jobj = new JNumber(sub_object_id);
-					ch = ((JNumber)jobj).parse(l_isr, ch);
+					jobj = new JNumber(subObjectId);
+					c = ((JNumber)jobj).parse(isr, c);
 					break;
 			}
 			if(null != jobj) {
 				jitems.add(jobj);
-				if(null != jobj.get_id()) {
-					indexes.put(jobj.get_id(), jobj);
+				if(null != jobj.getId()) {
+					indexes.put(jobj.getId(), jobj);
 				}
 			}
 
-			if(ch == NEW_LINE) {
-				ch = skip(l_isr, NEW_LINE);
+			if(c == NEW_LINE) {
+				c = skip(isr, NEW_LINE);
 			}
 
-			if(this instanceof JArray && SQ_CLOSE_BRACKET == ch) {
+			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {
 				break;
 			}
-			if(this instanceof JObject && CLOSE_BRACKET == ch) {
+			if(this instanceof JObject && CLOSE_BRACKET == c) {
 				break;
 			}
-			if(COMMA != ch) {
+			if(COMMA != c) {
 				throw new ParseException("Expected comma");
 			}
 		}
 	}
-	protected void parse(InputStream l_is) throws Exception {
+	protected void parse(InputStream is) throws Exception {
 		while(true) {
-			char ch = skip(l_is, SPACE);
-			if(ch == NEW_LINE) {
-				ch = skip(l_is, NEW_LINE);
+			char c = skip(is, SPACE);
+			if(c == NEW_LINE) {
+				c = skip(is, NEW_LINE);
 			}
-			String sub_object_id = null;
-			if(QUOT_MARK == ch) {
+			String subObjectId = null;
+			if(QUOT_MARK == c) {
 				StringBuilder sb = new StringBuilder();
-				read_str(l_is, sb);
-				sub_object_id = sb.toString();
-				ch = skip(l_is, SPACE);
-				if(DELIMETER != ch) {
+				readStr(is, sb);
+				subObjectId = sb.toString();
+				c = skip(is, SPACE);
+				if(DELIMETER != c) {
 					throw new ParseException("Missing delimeter");
 				}
-				ch = skip(l_is, SPACE);
+				c = skip(is, SPACE);
 			}
-			if(ch == NEW_LINE) {
-				ch = skip(l_is, NEW_LINE);
+			if(c == NEW_LINE) {
+				c = skip(is, NEW_LINE);
 			}
 
 			JObject jobj = null;
-			switch(ch) {
+			switch(c) {
 				case CLOSE_BRACKET:
 				case SQ_CLOSE_BRACKET:
 					break;
 				case OPEN_BRACKET:
-					jobj = new JObject(sub_object_id);
-					((JObject)jobj).parse(l_is);
-					ch = (char)l_is.read();
-					if(65535 == ch) {
+					jobj = new JObject(subObjectId);
+					((JObject)jobj).parse(is);
+					c = (char)is.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case SQ_OPEN_BRACKET:
-					jobj = new JArray(sub_object_id);
-					((JArray)jobj).parse(l_is);
-					ch = (char)l_is.read();
-					if(65535 == ch) {
+					jobj = new JArray(subObjectId);
+					((JArray)jobj).parse(is);
+					c = (char)is.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case QUOT_MARK:
-					jobj = new JString(sub_object_id);
-					((JString)jobj).parse(l_is);
-					ch = (char)l_is.read();
-					if(65535 == ch) {
+					jobj = new JString(subObjectId);
+					((JString)jobj).parse(is);
+					c = (char)is.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case T:
 				case F:
-					jobj = new JBoolean(sub_object_id);
-					ch = ((JBoolean)jobj).parse(l_is, ch);
+					jobj = new JBoolean(subObjectId);
+					c = ((JBoolean)jobj).parse(is, c);
 					break;
 				default:
-					jobj = new JNumber(sub_object_id);
-					ch = ((JNumber)jobj).parse(l_is, ch);
+					jobj = new JNumber(subObjectId);
+					c = ((JNumber)jobj).parse(is, c);
 					break;
 			}
 			if(null != jobj) {
 				jitems.add(jobj);
-				if(null != jobj.get_id()) {
-					indexes.put(jobj.get_id(), jobj);
+				if(null != jobj.getId()) {
+					indexes.put(jobj.getId(), jobj);
 				}
 			}
 
-			if(ch == NEW_LINE) {
-				ch = skip(l_is, NEW_LINE);
+			if(c == NEW_LINE) {
+				c = skip(is, NEW_LINE);
 			}
 
-			if(this instanceof JArray && SQ_CLOSE_BRACKET == ch) {
+			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {
 				break;
 			}
-			if(this instanceof JObject && CLOSE_BRACKET == ch) {
+			if(this instanceof JObject && CLOSE_BRACKET == c) {
 				break;
 			}
-			if(COMMA != ch) {
+			if(COMMA != c) {
 				throw new ParseException("Expected comma");
 			}
 		}
 	}
 
-	public String get_id() {
+	public String getId() {
 		return id;
 	}
-	public void set_id(String l_id) {
-		id = l_id;
+	public void setId(String id) {
+		this.id = id;
 	}
 
-	public String get_value() {
+	public String getValue() {
 		return value;
 	}
-	public void set_value(String l_value) throws Exception {
-		value = l_value;
+	public void setValue(String value) throws Exception {
+		this.value = value;
 	}
 
-	public boolean contains(String l_id) {
-		return indexes.containsKey(l_id);
+	public boolean contains(String id) {
+		return indexes.containsKey(id);
 	}
 
-	public JObject get_object(String l_id) throws MissingFieldException {
-		JObject obj = indexes.get(l_id);
+	public JObject getObject(String id) throws MissingFieldException {
+		JObject obj = indexes.get(id);
 		if(null == obj) {
-			throw new MissingFieldException(l_id);
+			throw new MissingFieldException(id);
 		}
 		return obj;
 	}
 
-	public Long get_long(String l_id) throws MissingFieldException {
-		JObject obj = get_object(l_id);
-		return NULL.equals(obj.get_value()) ? null : Long.parseLong(obj.get_value());
+	public Long getLong(String id) throws MissingFieldException {
+		JObject obj = getObject(id);
+		return NULL.equals(obj.getValue()) ? null : Long.parseLong(obj.getValue());
 	}
-	public Integer get_int(String l_id) throws MissingFieldException {
-		JObject obj = get_object(l_id);
-		return NULL.equals(obj.get_value()) ? null : Integer.parseInt(obj.get_value());
+	public Integer getInt(String id) throws MissingFieldException {
+		JObject obj = getObject(id);
+		return NULL.equals(obj.getValue()) ? null : Integer.parseInt(obj.getValue());
 	}
-	public Double get_double(String l_id) throws MissingFieldException {
-		JObject obj = get_object(l_id);
-		return NULL.equals(obj.get_value()) ? null : Double.parseDouble(obj.get_value());
+	public Double getDouble(String id) throws MissingFieldException {
+		JObject obj = getObject(id);
+		return NULL.equals(obj.getValue()) ? null : Double.parseDouble(obj.getValue());
 	}
-	public Float get_float(String l_id) throws MissingFieldException {
-		JObject obj = get_object(l_id);
-		return NULL.equals(obj.get_value()) ? null : Float.parseFloat(obj.get_value());
+	public Float getFloat(String id) throws MissingFieldException {
+		JObject obj = getObject(id);
+		return NULL.equals(obj.getValue()) ? null : Float.parseFloat(obj.getValue());
 	}
-	public Byte get_byte(String l_id) throws MissingFieldException {
-		JObject obj = get_object(l_id);
-		return NULL.equals(obj.get_value()) ? null : Byte.parseByte(obj.get_value());
+	public Byte getByte(String id) throws MissingFieldException {
+		JObject obj = getObject(id);
+		return NULL.equals(obj.getValue()) ? null : Byte.parseByte(obj.getValue());
 	}
-	public Boolean get_boolean(String l_id) throws MissingFieldException {
-		JObject obj = get_object(l_id);
-		if(obj.get_value().equalsIgnoreCase(TRUE)) {
+	public Boolean getBoolean(String id) throws MissingFieldException {
+		JObject obj = getObject(id);
+		if(obj.getValue().equalsIgnoreCase(TRUE)) {
 			return true;
 		}
-		else if (obj.get_value().equalsIgnoreCase(FALSE)) {
+		else if (obj.getValue().equalsIgnoreCase(FALSE)) {
 			return false;
 		}
 		return null;
 	}
-	public String get_string(String l_id) throws MissingFieldException {
-		JObject obj = get_object(l_id);
-		return obj.get_value();
+	public String getString(String id) throws MissingFieldException {
+		JObject obj = getObject(id);
+		return obj.getValue();
 	}
-	public byte[] get_bytes(String l_id) throws MissingFieldException {
-		JObject obj = get_object(l_id);
-		return (null == obj.get_value() || NULL.equals(obj.get_value()) || obj.get_value().isEmpty()) ? null : Utils.parseHexBinary(obj.get_value());
+	public byte[] getBytes(String id) throws MissingFieldException {
+		JObject obj = getObject(id);
+		return (null == obj.getValue() || NULL.equals(obj.getValue()) || obj.getValue().isEmpty()) ? null : Utils.parseHexBinary(obj.getValue());
 	}
-	public byte[] get_base64(String l_id) throws MissingFieldException {
-		JObject obj = get_object(l_id);
-		return (null == obj.get_value() || NULL.equals(obj.get_value()) || obj.get_value().isEmpty()) ? null : Utils.parseBase64Binary(obj.get_value());
+	public byte[] getBase64(String id) throws MissingFieldException {
+		JObject obj = getObject(id);
+		return (null == obj.getValue() || NULL.equals(obj.getValue()) || obj.getValue().isEmpty()) ? null : Utils.parseBase64Binary(obj.getValue());
 	}
 
-	public LinkedList<JObject> get_items() {
+	public LinkedList<JObject> getItems() {
 		return jitems;
 	}
 
-	char skip(InputStreamReader l_isr, char l_ch) throws Exception {
-		char ch;
+	char skip(InputStreamReader isr, char c) throws Exception {
+		char _c;
 		while(true) {
-			ch = (char)l_isr.read();
-			if(65535 == ch) {
+			_c = (char)isr.read();
+			if(65535 == _c) {
 				throw new UnexpectedEndException();
 			}
-			if(l_ch != ch) {
+			if(c != _c) {
 				break;
 			}
 		}
-		return ch;
+		return _c;
 	}
-	char skip(InputStream l_is, char l_ch) throws Exception {
+	char skip(InputStream is, char c) throws Exception {
 		int tmp;
-		while((tmp = l_is.read()) != -1) {
-			char ch = (char)tmp;
-			if(l_ch != ch) {
-				return ch;
+		while((tmp = is.read()) != -1) {
+			char _c = (char)tmp;
+			if(c != _c) {
+				return _c;
 			}
 		}
 		throw new UnexpectedEndException();
 	}
 
-	protected char read(InputStreamReader l_isr, StringBuilder l_sb, char... l_stop_chs) throws Exception {
-		char ch;
+	protected char read(InputStreamReader isr, StringBuilder sb, char... stopChs) throws Exception {
+		char c;
 l1:
 		while(true) {
-			ch = (char)l_isr.read();
-			if(65535 == ch) {
+			c = (char)isr.read();
+			if(65535 == c) {
 				throw new UnexpectedEndException();
 			}
-			for(char stop_ch : l_stop_chs) {
-				if(stop_ch == ch) {
+			for(char stopCh : stopChs) {
+				if(stopCh == c) {
 					break l1;
 				}
 			}
-			l_sb.append(ch);
+			sb.append(c);
 		}
-		return ch;
+		return c;
 	}
-	protected char read(InputStream l_is, StringBuilder l_sb, char... l_stop_chs) throws Exception {
+	protected char read(InputStream is, StringBuilder sb, char... stopChs) throws Exception {
 		int tmp;
-		while((tmp = l_is.read()) != -1) {
-			char ch = (char)tmp;
-			for(char stop_ch : l_stop_chs) {
-				if(stop_ch == ch) {
-					return ch;
+		while((tmp = is.read()) != -1) {
+			char c = (char)tmp;
+			for(char stopCh : stopChs) {
+				if(stopCh == c) {
+					return c;
 				}
 			}
-			l_sb.append(ch);
+			sb.append(c);
 		}
 		throw new UnexpectedEndException();
 	}
 
-	protected char read_str(InputStreamReader l_isr, StringBuilder l_sb) throws Exception {
-		char last_ch = 0x00;
-		char ch;
+	protected char readStr(InputStreamReader isr, StringBuilder sb) throws Exception {
+		char lastCh = 0x00;
+		char c;
 		while(true) {
-			ch = (char)l_isr.read();
-			if(65535 == ch) {
+			c = (char)isr.read();
+			if(65535 == c) {
 				throw new UnexpectedEndException();
 			}
 			if(null != ei) {
-				if('\\' == last_ch) {
-					if('u' == ch) {
-						ch = (char)Long.parseLong("" + (char)l_isr.read() + (char)l_isr.read() + (char)l_isr.read() + (char)l_isr.read(), 0x10);
+				if('\\' == lastCh) {
+					if('u' == c) {
+						c = (char)Long.parseLong("" + (char)isr.read() + (char)isr.read() + (char)isr.read() + (char)isr.read(), 0x10);
 					}
 					else {
-						ch = ei.unescape(ch);
+						c = ei.unescape(c);
 					}
-					last_ch = ch;
-				   l_sb.append(ch);
+					lastCh = c;
+					sb.append(c);
 					continue;
 				}
-				else if('\\' == ch) {
-					last_ch = ch;
+				else if('\\' == c) {
+					lastCh = c;
 					continue;
 				}
 			}				
-			if(QUOT_MARK == ch) {
+			if(QUOT_MARK == c) {
 				break;
 			}
-			last_ch = ch;
-			l_sb.append(ch);
+			lastCh = c;
+			sb.append(c);
 		}
-		return ch;
+		return c;
 	}
-	protected char read_str(InputStream l_is, StringBuilder l_sb) throws Exception {
-		char last_ch = 0x00;
+	protected char readStr(InputStream is, StringBuilder sb) throws Exception {
+		char lastCh = 0x00;
 		int tmp;
-		while((tmp = l_is.read()) != -1) {
-			char ch = (char)tmp;
+		while((tmp = is.read()) != -1) {
+			char c = (char)tmp;
 			if(null != ei) {
-				if('\\' == last_ch) {
-					if('u' == ch) {
-						ch = (char)Long.parseLong("" + (char)l_is.read() + (char)l_is.read() + (char)l_is.read() + (char)l_is.read(), 0x10);
+				if('\\' == lastCh) {
+					if('u' == c) {
+						c = (char)Long.parseLong("" + (char)is.read() + (char)is.read() + (char)is.read() + (char)is.read(), 0x10);
 					}
 					else {
-						ch = ei.unescape(ch);
+						c = ei.unescape(c);
 					}
-					last_ch = ch;
-					l_sb.append(ch);
+					lastCh = c;
+					sb.append(c);
 					continue;
 				}
-				else if('\\' == ch) {
-					last_ch = ch;
+				else if('\\' == c) {
+					lastCh = c;
 					continue;
 				}
 			}				
-			if(QUOT_MARK == ch) {
-				return ch;
+			if(QUOT_MARK == c) {
+				return c;
 			}
-			last_ch = ch;
-			l_sb.append(ch);
+			lastCh = c;
+			sb.append(c);
 		}
 		throw new UnexpectedEndException();
 	}
 
-	public static String Short2Hex(int l_val) {
-		final String result = Integer.toHexString(l_val & 0x0000ffff);
+	public static String Short2Hex(int val) {
+		final String result = Integer.toHexString(val & 0x0000ffff);
 		return "0000".substring(0x00, 0x04 - result.length()) + result;
 	}
 
-	public String toString(String l_value) {
-		return (null == id ? l_value : QUOT_MARK + escape(id) + QUOT_MARK + DELIMETER + l_value);
+	public String toString(String value) {
+		return (null == id ? value : QUOT_MARK + escape(id) + QUOT_MARK + DELIMETER + value);
 	}
 
-	void write_left(OutputStream l_os) throws IOException {
+	void writePrefix(OutputStream os) throws IOException {
 		if(null != id) {
 			StringBuilder sb = new StringBuilder().append(QUOT_MARK).append(escape(id)).append(QUOT_MARK).append(DELIMETER);
-			l_os.write(sb.toString().getBytes("UTF-8"));
+			os.write(sb.toString().getBytes("UTF-8"));
 		}
 	}
-	void write_right(OutputStream l_os) throws IOException {
+	void writePostfix(OutputStream os) throws IOException {
 	}
 
-	public void write(OutputStream l_os) throws IOException {
+	public void write(OutputStream os) throws IOException {
 		if(null != value) {
-			write_left(l_os);
-			l_os.write(escape(value).getBytes("UTF-8"));
-			write_right(l_os);
+			writePrefix(os);
+			os.write(escape(value).getBytes("UTF-8"));
+			writePostfix(os);
 		}
 		else {
 			if(null != id) {
 				StringBuilder sb = new StringBuilder().append(QUOT_MARK).append(escape(id)).append(QUOT_MARK).append(DELIMETER);
-				l_os.write(sb.toString().getBytes("UTF-8"));
+				os.write(sb.toString().getBytes("UTF-8"));
 			}
-			l_os.write(OPEN_BRACKET);
+			os.write(OPEN_BRACKET);
 			if(!jitems.isEmpty()) {
 				for(JObject jobj : jitems) {
-					jobj.write(l_os);
+					jobj.write(os);
 					if(jitems.getLast() != jobj) {
-						l_os.write(COMMA);
+						os.write(COMMA);
 					}
 				}
 			}
-			l_os.write(CLOSE_BRACKET);
+			os.write(CLOSE_BRACKET);
 		}
 	}
 
-	protected String escape(String l_str) {
-		if(null == ei || null == l_str) {
-			return l_str;
+	protected String escape(String str) {
+		if(null == ei || null == str) {
+			return str;
 		}
 		
 		StringBuilder sb = new StringBuilder();
-		for(int pos=0; pos < l_str.length(); pos++) {
-			char ch = l_str.charAt(pos);
+		for(int pos=0; pos < str.length(); pos++) {
+			char ch = str.charAt(pos);
 			char ech = ei.escape(ch);
 			if(0x00 == ech) {
 				sb.append(ch);
@@ -570,8 +570,8 @@ l1:
 			sb.append(OPEN_BRACKET);
 			if(!jitems.isEmpty()) {
 				for(JObject jobj : jitems) {
-				sb.append(jobj.toString());
-				sb.append(COMMA);
+					sb.append(jobj.toString());
+					sb.append(COMMA);
 				}
 				sb.deleteCharAt(sb.length() - 0x01);
 			}
@@ -580,11 +580,11 @@ l1:
 		}
 	}
 
-	public long get_parse_time() {
-		return parse_time;
+	public long getParseTime() {
+		return parseTime;
 	}
 
-	public static void set_ei(EscapeInterface l_ei) {
-		ei = l_ei;
+	public static void setEI(EscapeInterface _ei) {
+		ei = _ei;
 	}
 }

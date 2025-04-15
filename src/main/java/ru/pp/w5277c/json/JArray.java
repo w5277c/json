@@ -13,158 +13,158 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 public class JArray extends JObject {
-	public JArray(String l_id) {
-		super(l_id);
+	public JArray(String id) {
+		super(id);
 	}
 
 	@Override
-	protected void parse(InputStreamReader l_isr) throws Exception {
+	protected void parse(InputStreamReader isr) throws Exception {
 		while(true) {
-			char ch = skip(l_isr, SPACE);
-			if(ch == NEW_LINE) {
-				ch = skip(l_isr, NEW_LINE);
+			char c = skip(isr, SPACE);
+			if(c == NEW_LINE) {
+				c = skip(isr, NEW_LINE);
 			}
 
 			JObject jobj = null;
-			switch(ch) {
+			switch(c) {
 				case CLOSE_BRACKET:
 				case SQ_CLOSE_BRACKET:
 					break;
 				case OPEN_BRACKET:
 					jobj = new JObject();
-					((JObject)jobj).parse(l_isr);
-					ch = (char)l_isr.read();
-					if(65535 == ch) {
+					((JObject)jobj).parse(isr);
+					c = (char)isr.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case SQ_OPEN_BRACKET:
 					jobj = new JArray((String)null);
-					((JArray)jobj).parse(l_isr);
-					ch = (char)l_isr.read();
-					if(65535 == ch) {
+					((JArray)jobj).parse(isr);
+					c = (char)isr.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case QUOT_MARK:
 					jobj = new JString((String)null);
-					((JString)jobj).parse(l_isr);
-					ch = (char)l_isr.read();
-					if(65535 == ch) {
+					((JString)jobj).parse(isr);
+					c = (char)isr.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case T:
 				case F:
 					jobj = new JBoolean((String)null);
-					ch = ((JBoolean)jobj).parse(l_isr, ch);
+					c = ((JBoolean)jobj).parse(isr, c);
 					break;
 				default:
 					jobj = new JNumber((String)null);
-					ch = ((JNumber)jobj).parse(l_isr, ch);
+					c = ((JNumber)jobj).parse(isr, c);
 					break;
 			}
 			if(null != jobj) {
 				jitems.add(jobj);
 			}
 
-			if(ch == NEW_LINE) {
-				ch = skip(l_isr, NEW_LINE);
+			if(c == NEW_LINE) {
+				c = skip(isr, NEW_LINE);
 			}
 
-			if(this instanceof JArray && SQ_CLOSE_BRACKET == ch) {
+			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {
 				break;
 			}
-			if(this instanceof JObject && CLOSE_BRACKET == ch) {
+			if(this instanceof JObject && CLOSE_BRACKET == c) {
 				break;
 			}
-			if(COMMA != ch) {
+			if(COMMA != c) {
 				throw new ParseException("Expected comma");
 			}
 		}
 	}
 
 	@Override
-	protected void parse(InputStream l_is) throws Exception {
+	protected void parse(InputStream is) throws Exception {
 		while(true) {
-			char ch = skip(l_is, SPACE);
-			if(ch == NEW_LINE) {
-				ch = skip(l_is, NEW_LINE);
+			char c = skip(is, SPACE);
+			if(c == NEW_LINE) {
+				c = skip(is, NEW_LINE);
 			}
 
 			JObject jobj = null;
-			switch(ch) {
+			switch(c) {
 				case CLOSE_BRACKET:
 				case SQ_CLOSE_BRACKET:
 					break;
 				case OPEN_BRACKET:
 					jobj = new JObject();
-					((JObject)jobj).parse(l_is);
-					ch = (char)l_is.read();
-					if(65535 == ch) {
+					((JObject)jobj).parse(is);
+					c = (char)is.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case SQ_OPEN_BRACKET:
 					jobj = new JArray((String)null);
-					((JArray)jobj).parse(l_is);
-					ch = (char)l_is.read();
-					if(65535 == ch) {
+					((JArray)jobj).parse(is);
+					c = (char)is.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case QUOT_MARK:
 					jobj = new JString((String)null);
-					((JString)jobj).parse(l_is);
-					ch = (char)l_is.read();
-					if(65535 == ch) {
+					((JString)jobj).parse(is);
+					c = (char)is.read();
+					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case T:
 				case F:
 					jobj = new JBoolean((String)null);
-					ch = ((JBoolean)jobj).parse(l_is, ch);
+					c = ((JBoolean)jobj).parse(is, c);
 					break;
 				default:
 					jobj = new JNumber((String)null);
-					ch = ((JNumber)jobj).parse(l_is, ch);
+					c = ((JNumber)jobj).parse(is, c);
 					break;
 			}
 			if(null != jobj) {
 				jitems.add(jobj);
 			}
 
-			if(ch == NEW_LINE) {
-				ch = skip(l_is, NEW_LINE);
+			if(c == NEW_LINE) {
+				c = skip(is, NEW_LINE);
 			}
 
-			if(this instanceof JArray && SQ_CLOSE_BRACKET == ch) {
+			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {
 				break;
 			}
-			if(this instanceof JObject && CLOSE_BRACKET == ch) {
+			if(this instanceof JObject && CLOSE_BRACKET == c) {
 				break;
 			}
-			if(COMMA != ch) {
+			if(COMMA != c) {
 				throw new ParseException("Expected comma");
 			}
 		}
 	}
 
 	@Override
-	public void write(OutputStream l_os) throws IOException {
-		super.write_left(l_os);
-		l_os.write(SQ_OPEN_BRACKET);
+	public void write(OutputStream os) throws IOException {
+		super.writePrefix(os);
+		os.write(SQ_OPEN_BRACKET);
 		if(!jitems.isEmpty()) {
 			for(JObject jobj : jitems) {
-				jobj.write(l_os);
+				jobj.write(os);
 				if(jitems.getLast() != jobj) {
-					l_os.write(COMMA);
+					os.write(COMMA);
 				}
 			}
 		}
-		l_os.write(SQ_CLOSE_BRACKET);
-		super.write_right(l_os);
+		os.write(SQ_CLOSE_BRACKET);
+		super.writePostfix(os);
 	}
 
 	@Override

@@ -12,38 +12,38 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class JBoolean extends JObject {
-	JBoolean(String l_id) {
-		super(l_id);
+	JBoolean(String id) {
+		super(id);
 	}
 
-	public JBoolean(String l_id, boolean l_is_true) {
-		super(l_id);
-		value = l_is_true ? TRUE : FALSE;
+	public JBoolean(String id, boolean isTrue) {
+		super(id);
+		value = isTrue ? TRUE : FALSE;
 	}
 
-	public char parse(InputStreamReader l_isr, char l_ch) throws Exception {
+	public char parse(InputStreamReader isr, char c) throws Exception {
 		StringBuilder sb = new StringBuilder();
-		sb.append(l_ch);
-		char ch = read(l_isr, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
+		sb.append(c);
+		char _c = read(isr, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
 		if(sb.toString().toLowerCase().equals(TRUE) || sb.toString().toLowerCase().equals(FALSE)) {
 			value = sb.toString().toLowerCase();
 		}
 		else {
 			throw new ParseException("Incorrect value:" + sb.toString());
 		}
-		return ch;
+		return _c;
 	}
 
-	public char parse(InputStream l_is, char l_ch) throws Exception {
+	public char parse(InputStream is, char c) throws Exception {
 		StringBuilder sb = new StringBuilder();
-		sb.append(l_ch);
-		char ch = read(l_is, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
+		sb.append(c);
+		char _c = read(is, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
 		if(sb.toString().toLowerCase().equals(TRUE) || sb.toString().toLowerCase().equals(FALSE)) {
 			value = sb.toString().toLowerCase();
 		}
 		else {
 			throw new ParseException("Incorrect value:" + sb.toString());
 		}
-		return ch;
+		return _c;
 	}
 }

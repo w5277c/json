@@ -6,6 +6,6 @@
 package ru.pp.w5277c.json;
 
 public interface EscapeInterface {
-	public char escape(char l_char);
-	public char unescape(char l_char);
+	public char escape(char c);
+	public char unescape(char c);
 }

@@ -6,7 +6,7 @@
 package ru.pp.w5277c.json;
 
 public class ParseException extends Exception {
-	public ParseException(String l_name) {
-		super(l_name);
+	public ParseException(String name) {
+		super(name);
 	}
 }

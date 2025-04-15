@@ -6,7 +6,7 @@
 package ru.pp.w5277c.json;
 
 public class MissingFieldException extends Exception {
-	public MissingFieldException(String l_id) {
-		super(l_id);
+	public MissingFieldException(String id) {
+		super(id);
 	}
 }

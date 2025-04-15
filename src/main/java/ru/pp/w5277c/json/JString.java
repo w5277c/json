@@ -16,45 +16,45 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 public class JString extends JObject {
-	JString(String l_id) {
-		super(l_id);
+	JString(String id) {
+		super(id);
 	}
-	public JString(String l_id, String l_value) {
-		super(l_id);
-		value = l_value;
-	}
-
-	@Override
-	public String toString(String l_value) {
-		return (null == id ? QUOT_MARK + l_value + QUOT_MARK : QUOT_MARK + escape(id) + QUOT_MARK + DELIMETER + QUOT_MARK + escape(l_value) + QUOT_MARK);
+	public JString(String id, String value) {
+		super(id);
+		this.value = value;
 	}
 
 	@Override
-	void write_left(OutputStream l_os) throws IOException {
+	public String toString(String value) {
+		return (null == id ? QUOT_MARK + value + QUOT_MARK : QUOT_MARK + escape(id) + QUOT_MARK + DELIMETER + QUOT_MARK + escape(value) + QUOT_MARK);
+	}
+
+	@Override
+	void writePrefix(OutputStream os) throws IOException {
 		if(null == id) {
-			l_os.write(QUOT_MARK);
+			os.write(QUOT_MARK);
 		}
 		else {
 			StringBuilder sb = new StringBuilder().append(QUOT_MARK).append(escape(id)).append(QUOT_MARK).append(DELIMETER).append(QUOT_MARK);
-			l_os.write(sb.toString().getBytes("UTF-8"));
+			os.write(sb.toString().getBytes("UTF-8"));
 		}
 	}
 	@Override
-	void write_right(OutputStream l_os) throws IOException {
-		l_os.write(QUOT_MARK);
+	void writePostfix(OutputStream os) throws IOException {
+		os.write(QUOT_MARK);
 	}
 
 	@Override
-	public void parse(InputStreamReader l_isr) throws Exception {
+	public void parse(InputStreamReader isr) throws Exception {
 		StringBuilder sb = new StringBuilder();
-		read_str(l_isr, sb);
+		readStr(isr, sb);
 		value = sb.toString();
 	}
 	@Override
-	public void parse(InputStream l_is) throws Exception {
+	public void parse(InputStream is) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		while(true) {
-			read_str(l_is, sb);
+			readStr(is, sb);
 			if(sb.length()<0x02) {
 				break;
 			}

@@ -14,45 +14,63 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class JNumber extends JObject {
-	JNumber(String l_id) {
-		super(l_id);
+	JNumber(String id) {
+		super(id);
 	}
 
-	public JNumber(String l_id, Long l_value) {
-		super(l_id);
-		value = null == l_value ? "null" : Long.toString(l_value);
+	public JNumber(String id, Long value) {
+		super(id);
+		this.value = null == value ? "null" : Long.toString(value);
 	}
-	public JNumber(String l_id, Integer l_value) {
-		super(l_id);
-		value = null == l_value ? "null" : Integer.toString(l_value);
+	public JNumber(String id, Integer value) {
+		super(id);
+		this.value = null == value ? "null" : Integer.toString(value);
 	}
-	public JNumber(String l_id, Byte l_value) {
-		super(l_id);
-		value = null == l_value ? "null" : Byte.toString(l_value);
+	public JNumber(String id, Byte value) {
+		super(id);
+		this.value = null == value ? "null" : Byte.toString(value);
 	}
-	public JNumber(String l_id, Double l_value) {
-		this(l_id, l_value, null);
+	public JNumber(String id, Double value) {
+		this(id, value, null);
 	}
-	public JNumber(String l_id, Double l_value, Integer l_scale) {
-		super(l_id);
-		if(null == l_value) {
-			value = "null";
+	public JNumber(String id, Double value, Integer scale) {
+		super(id);
+		if(null == value) {
+			this.value = "null";
 		}
 		else {
-			if(null == l_scale) {
-				value = Double.toString(l_value);
+			if(null == scale) {
+				this.value = Double.toString(value);
 			}
 			else {
-				BigDecimal bd = (null == l_scale ? new BigDecimal(l_value) : new BigDecimal(l_value).setScale(l_scale, RoundingMode.HALF_UP));
-				value = bd.toString();
+				BigDecimal bd = (null == scale ? new BigDecimal(value) : new BigDecimal(value).setScale(scale, RoundingMode.HALF_UP));
+				this.value = bd.toString();
 			}
 		}
 	}
 
-	public char parse(InputStreamReader l_isr, char l_ch) throws Exception {
+	public char parse(InputStreamReader isr, char c) throws Exception {
 		StringBuilder sb = new StringBuilder();
-		sb.append(l_ch);
-		char ch = read(l_isr, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
+		sb.append(c);
+		char _c = read(isr, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
+		try {
+			if("null".equals(sb.toString())) {
+				value = "null";
+			}
+			else {
+				Double.parseDouble(sb.toString());
+				value = sb.toString();
+			}
+		}
+		catch(Exception ex) {
+			throw new ParseException("Incorrect value:" + sb.toString());
+		}
+		return _c;
+	}
+	public char parse(InputStream is, char c) throws Exception {
+		StringBuilder sb = new StringBuilder();
+		sb.append(c);
+		char ch = read(is, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
 		try {
 			if("null".equals(sb.toString())) {
 				value = "null";
@@ -67,38 +85,20 @@ public class JNumber extends JObject {
 		}
 		return ch;
 	}
-	public char parse(InputStream l_is, char l_ch) throws Exception {
-		StringBuilder sb = new StringBuilder();
-		sb.append(l_ch);
-		char ch = read(l_is, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
-		try {
-			if("null".equals(sb.toString())) {
-				value = "null";
-			}
-			else {
-				Double.parseDouble(sb.toString());
-				value = sb.toString();
-			}
-		}
-		catch(Exception ex) {
-			throw new ParseException("Incorrect value:" + sb.toString());
-		}
-		return ch;
-	}
 
-	public int get_int() {
+	public int getInt() {
 		return "null".equals(value) ? null : Integer.parseInt(value);
 	}
 
-	public long get_long() {
+	public long getLong() {
 		return "null".equals(value) ? null : Long.parseLong(value);
 	}
 
-	public void set_Value(Long l_value) {
-		value = null == l_value ? null : Long.toString(l_value);
+	public void setValue(Long value) {
+		this.value = null == value ? null : Long.toString(value);
 	}
 
-	public void set_value(Double l_value) {
-		value = null == l_value ? null : Double.toString(l_value);
+	public void setValue(Double value) {
+		this.value = null == value ? null : Double.toString(value);
 	}
 }

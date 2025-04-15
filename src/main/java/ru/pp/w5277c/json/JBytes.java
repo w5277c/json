@@ -11,36 +11,32 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class JBytes extends JObject {
-	JBytes(String l_id) {
-		super(l_id);
-	}
-
-	public JBytes(String l_id, byte[] l_value) {
-		super(l_id);
-		value = null == l_value ? "null" : Utils.printHexBinary(l_value);
+	public JBytes(String id, byte[] value) {
+		super(id);
+		this.value = null == value ? "null" : Utils.printHexBinary(value);
 	}
 
 	@Override
-	public String toString(String l_value) {
-		return (null == id ? l_value : QUOT_MARK + escape(id) + QUOT_MARK + DELIMETER + QUOT_MARK + escape(l_value) + QUOT_MARK);
+	public String toString(String value) {
+		return (null == id ? value : QUOT_MARK + escape(id) + QUOT_MARK + DELIMETER + QUOT_MARK + escape(value) + QUOT_MARK);
 	}
 
 	@Override
-	void write_left(OutputStream l_os) throws IOException {
+	void writePrefix(OutputStream os) throws IOException {
 		if(null != id) {
 			StringBuilder sb = new StringBuilder().append(QUOT_MARK).append(escape(id)).append(QUOT_MARK).append(DELIMETER).append(QUOT_MARK);
-			l_os.write(sb.toString().getBytes("UTF-8"));
+			os.write(sb.toString().getBytes("UTF-8"));
 		}
 	}
 
 	@Override
-	void write_right(OutputStream l_os) throws IOException {
+	void writePostfix(OutputStream os) throws IOException {
 		if(null != id) {
-			l_os.write(QUOT_MARK);
+			os.write(QUOT_MARK);
 		}
 	}
 
-	public void set_value(byte[] l_value) {
-		value = null == l_value ? "null" : Utils.printHexBinary(l_value);
+	public void set_value(byte[] value) {
+		this.value = null == value ? "null" : Utils.printHexBinary(value);
 	}
 }

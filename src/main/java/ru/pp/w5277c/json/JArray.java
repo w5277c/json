@@ -7,9 +7,9 @@
 --------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 package ru.pp.w5277c.json;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Reader;
 
 public class JArray extends JObject {
 	public JArray() {
@@ -20,9 +20,9 @@ public class JArray extends JObject {
 	}
 
 	@Override
-	protected void parse(BufferedReader br) throws Exception {
+	protected void parse(Reader reader) throws Exception {
 		while(true) {
-			char c = skip(br, SPACE, TAB, '\r', '\n');
+			char c = skip(reader, SPACE, TAB, '\r', '\n');
 
 			JObject jobj = null;
 			switch(c) {
@@ -31,24 +31,24 @@ public class JArray extends JObject {
 					break;
 				case OPEN_BRACKET:
 					jobj = new JObject();
-					((JObject)jobj).parse(br);
-					c = (char)br.read();
+					((JObject)jobj).parse(reader);
+					c = (char)reader.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case SQ_OPEN_BRACKET:
 					jobj = new JArray((String)null);
-					((JArray)jobj).parse(br);
-					c = (char)br.read();
+					((JArray)jobj).parse(reader);
+					c = (char)reader.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case QUOT_MARK:
 					jobj = new JString((String)null);
-					((JString)jobj).parse(br);
-					c = (char)br.read();
+					((JString)jobj).parse(reader);
+					c = (char)reader.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
@@ -56,11 +56,11 @@ public class JArray extends JObject {
 				case T:
 				case F:
 					jobj = new JBoolean((String)null);
-					c = ((JBoolean)jobj).parse(br, c);
+					c = ((JBoolean)jobj).parse(reader, c);
 					break;
 				default:
 					jobj = new JNumber((String)null);
-					c = ((JNumber)jobj).parse(br, c);
+					c = ((JNumber)jobj).parse(reader, c);
 					break;
 			}
 			if(null != jobj) {
@@ -68,7 +68,7 @@ public class JArray extends JObject {
 			}
 
 			if(c == SPACE || c == TAB || c == '\r' || c == '\n') {
-				c = skip(br, SPACE, TAB, '\r', '\n');
+				c = skip(reader, SPACE, TAB, '\r', '\n');
 			}
 
 			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {

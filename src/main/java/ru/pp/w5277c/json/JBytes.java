@@ -24,8 +24,7 @@ public class JBytes extends JObject {
 	@Override
 	void writePrefix(OutputStream os) throws IOException {
 		if(null != id) {
-			StringBuilder sb = new StringBuilder().append(QUOT_MARK).append(escape(id)).append(QUOT_MARK).append(DELIMETER).append(QUOT_MARK);
-			os.write(sb.toString().getBytes("UTF-8"));
+			os.write((QUOT_MARK + escape(id) + QUOT_MARK + DELIMETER + QUOT_MARK).getBytes("UTF-8"));
 		}
 	}
 

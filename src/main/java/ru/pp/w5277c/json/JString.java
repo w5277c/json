@@ -10,11 +10,9 @@
 --------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 package ru.pp.w5277c.json;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 
 public class JString extends JObject {
 	JString(String id) {
@@ -36,8 +34,7 @@ public class JString extends JObject {
 			os.write(QUOT_MARK);
 		}
 		else {
-			StringBuilder sb = new StringBuilder().append(QUOT_MARK).append(escape(id)).append(QUOT_MARK).append(DELIMETER).append(QUOT_MARK);
-			os.write(sb.toString().getBytes("UTF-8"));
+			os.write((QUOT_MARK + escape(id) + QUOT_MARK + DELIMETER + QUOT_MARK).getBytes("UTF-8"));
 		}
 	}
 	@Override
@@ -46,10 +43,10 @@ public class JString extends JObject {
 	}
 
 	@Override
-	public void parse(BufferedReader br) throws Exception {
+	public void parse(Reader reader) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		while(true) {
-			readStr(br, sb);
+			readStr(reader, sb);
 			if(sb.length()<0x02) {
 				break;
 			}

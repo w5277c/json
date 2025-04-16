@@ -8,7 +8,7 @@
 --------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 package ru.pp.w5277c.json;
 
-import java.io.BufferedReader;
+import java.io.Reader;
 
 public class JBoolean extends JObject {
 	JBoolean(String id) {
@@ -20,12 +20,12 @@ public class JBoolean extends JObject {
 		value = isTrue ? TRUE : FALSE;
 	}
 
-	public char parse(BufferedReader is, char c) throws Exception {
+	public char parse(Reader reader, char c) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		sb.append(c);
-		char _c = read(is, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
-		if(sb.toString().trim().toLowerCase().equals(TRUE) || sb.toString().toLowerCase().equals(FALSE)) {
-			value = sb.toString().trim().toLowerCase();
+		char _c = read(reader, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET, '\r', '\n', '\t'); //todo use isAlpha
+		if(sb.toString().toLowerCase().equals(TRUE) || sb.toString().toLowerCase().equals(FALSE)) {
+			value = sb.toString().toLowerCase();
 		}
 		else {
 			throw new ParseException("Incorrect value:" + sb.toString());

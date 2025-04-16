@@ -8,9 +8,7 @@
 --------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 package ru.pp.w5277c.json;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -48,26 +46,25 @@ public class JNumber extends JObject {
 				this.value = Double.toString(value);
 			}
 			else {
-				BigDecimal bd = (null == scale ? new BigDecimal(value) : new BigDecimal(value).setScale(scale, RoundingMode.HALF_UP));
-				this.value = bd.toString();
+				this.value = new BigDecimal(value).setScale(scale, RoundingMode.HALF_UP).toString();
 			}
 		}
 	}
 
-	public char parse(BufferedReader br, char c) throws Exception {
+	public char parse(Reader reader, char c) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		sb.append(c);
-		char ch = read(br, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET);
+		char ch = read(reader, sb, COMMA, SPACE, CLOSE_BRACKET, SQ_CLOSE_BRACKET, '\r', '\n', '\t'); //todo use isNumber
 		try {
 			if("null".equals(sb.toString())) {
 				value = "null";
 			}
 			else {
-				Double.parseDouble(sb.toString());
+				Double.valueOf(sb.toString());
 				value = sb.toString();
 			}
 		}
-		catch(Exception ex) {
+		catch(NumberFormatException ex) {
 			throw new ParseException("Incorrect value:" + sb.toString());
 		}
 		return ch;

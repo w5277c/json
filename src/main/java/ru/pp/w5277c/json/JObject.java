@@ -18,6 +18,7 @@ package ru.pp.w5277c.json;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
@@ -104,17 +105,22 @@ public class JObject {
 		this.id = id;
 	}
 
-	public static BufferedReader str2stream(String str) throws UnsupportedEncodingException {
-		return new BufferedReader(new StringReader(str));
+	public static Reader str2reader(String str) {
+		return new StringReader(str);
+	}
+	public static Reader part2reader(Reader reader, int length) throws IOException {
+		char[] buffer = new char[length];
+		reader.read(buffer, 0, length);
+		return new StringReader(new String(buffer));
 	}
 
-	public JObject(BufferedReader br) throws Exception {
-		char c = skip(br, SPACE, TAB, '\r', '\n');
+	public JObject(Reader reader) throws Exception {
+		char c = skip(reader, SPACE, TAB, '\r', '\n');
 		if(OPEN_BRACKET != c) {
 			throw new ParseException("Missing open bracket, got:" + Short2Hex(c) + ":'" + c + "'");
 		}
 		long tmp = System.currentTimeMillis();
-		parse(br);
+		parse(reader);
 		parseTime = System.currentTimeMillis() - tmp;
 	}
 
@@ -143,19 +149,19 @@ public class JObject {
 		throw new Exception("Unsuported value type for:" + id);
 	}
 
-	protected void parse(BufferedReader br) throws Exception {
+	protected void parse(Reader reader) throws Exception {
 		while(true) {
-			char c = skip(br, SPACE, TAB, '\r', '\n');
+			char c = skip(reader, SPACE, TAB, '\r', '\n');
 			String subObjectId = null;
 			if(QUOT_MARK == c) {
 				StringBuilder sb = new StringBuilder();
-				readStr(br, sb);
+				readStr(reader, sb);
 				subObjectId = sb.toString();
-				c = skip(br, SPACE, TAB, '\r', '\n');
+				c = skip(reader, SPACE, TAB, '\r', '\n');
 				if(DELIMETER != c) {
 					throw new ParseException("Missing delimeter");
 				}
-				c = skip(br, SPACE, TAB, '\r', '\n');
+				c = skip(reader, SPACE, TAB, '\r', '\n');
 			}
 
 			JObject jobj = null;
@@ -165,24 +171,24 @@ public class JObject {
 					break;
 				case OPEN_BRACKET:
 					jobj = new JObject(subObjectId);
-					((JObject)jobj).parse(br);
-					c = (char)br.read();
+					((JObject)jobj).parse(reader);
+					c = (char)reader.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case SQ_OPEN_BRACKET:
 					jobj = new JArray(subObjectId);
-					((JArray)jobj).parse(br);
-					c = (char)br.read();
+					((JArray)jobj).parse(reader);
+					c = (char)reader.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
 					break;
 				case QUOT_MARK:
 					jobj = new JString(subObjectId);
-					((JString)jobj).parse(br);
-					c = (char)br.read();
+					((JString)jobj).parse(reader);
+					c = (char)reader.read();
 					if(65535 == c) {
 						throw new UnexpectedEndException();
 					}
@@ -190,11 +196,11 @@ public class JObject {
 				case T:
 				case F:
 					jobj = new JBoolean(subObjectId);
-					c = ((JBoolean)jobj).parse(br, c);
+					c = ((JBoolean)jobj).parse(reader, c);
 					break;
 				default:
 					jobj = new JNumber(subObjectId);
-					c = ((JNumber)jobj).parse(br, c);
+					c = ((JNumber)jobj).parse(reader, c);
 					break;
 			}
 			if(null != jobj) {
@@ -205,7 +211,7 @@ public class JObject {
 			}
 
 			if(c == SPACE || c == TAB || c == '\r' || c == '\n') {
-				c = skip(br, SPACE, TAB, '\r', '\n');
+				c = skip(reader, SPACE, TAB, '\r', '\n');
 			}
 
 			if(this instanceof JArray && SQ_CLOSE_BRACKET == c) {
@@ -238,7 +244,7 @@ public class JObject {
 		return indexes.containsKey(id);
 	}
 
-	public JObject getObject(String id) throws MissingFieldException {
+	public JObject get(String id) throws MissingFieldException {
 		JObject obj = indexes.get(id);
 		if(null == obj) {
 			throw new MissingFieldException(id);
@@ -247,27 +253,27 @@ public class JObject {
 	}
 
 	public Long getLong(String id) throws MissingFieldException {
-		JObject obj = getObject(id);
-		return NULL.equals(obj.getValue()) ? null : Long.parseLong(obj.getValue());
+		JObject obj = get(id);
+		return NULL.equals(obj.getValue()) ? null : Long.valueOf(obj.getValue());
 	}
 	public Integer getInt(String id) throws MissingFieldException {
-		JObject obj = getObject(id);
-		return NULL.equals(obj.getValue()) ? null : Integer.parseInt(obj.getValue());
+		JObject obj = get(id);
+		return NULL.equals(obj.getValue()) ? null : Integer.valueOf(obj.getValue());
 	}
 	public Double getDouble(String id) throws MissingFieldException {
-		JObject obj = getObject(id);
-		return NULL.equals(obj.getValue()) ? null : Double.parseDouble(obj.getValue());
+		JObject obj = get(id);
+		return NULL.equals(obj.getValue()) ? null : Double.valueOf(obj.getValue());
 	}
 	public Float getFloat(String id) throws MissingFieldException {
-		JObject obj = getObject(id);
-		return NULL.equals(obj.getValue()) ? null : Float.parseFloat(obj.getValue());
+		JObject obj = get(id);
+		return NULL.equals(obj.getValue()) ? null : Float.valueOf(obj.getValue());
 	}
 	public Byte getByte(String id) throws MissingFieldException {
-		JObject obj = getObject(id);
-		return NULL.equals(obj.getValue()) ? null : Byte.parseByte(obj.getValue());
+		JObject obj = get(id);
+		return NULL.equals(obj.getValue()) ? null : Byte.valueOf(obj.getValue());
 	}
 	public Boolean getBoolean(String id) throws MissingFieldException {
-		JObject obj = getObject(id);
+		JObject obj = get(id);
 		if(obj.getValue().equalsIgnoreCase(TRUE)) {
 			return true;
 		}
@@ -277,15 +283,15 @@ public class JObject {
 		return null;
 	}
 	public String getString(String id) throws MissingFieldException {
-		JObject obj = getObject(id);
+		JObject obj = get(id);
 		return obj.getValue();
 	}
 	public byte[] getBytes(String id) throws MissingFieldException {
-		JObject obj = getObject(id);
+		JObject obj = get(id);
 		return (null == obj.getValue() || NULL.equals(obj.getValue()) || obj.getValue().isEmpty()) ? null : Utils.parseHexBinary(obj.getValue());
 	}
 	public byte[] getBase64(String id) throws MissingFieldException {
-		JObject obj = getObject(id);
+		JObject obj = get(id);
 		return (null == obj.getValue() || NULL.equals(obj.getValue()) || obj.getValue().isEmpty()) ? null : Utils.parseBase64Binary(obj.getValue());
 	}
 
@@ -293,9 +299,9 @@ public class JObject {
 		return jitems;
 	}
 
-	char skip(BufferedReader br, char... chars) throws Exception {
+	char skip(Reader reader, char... chars) throws Exception {
 		int tmp;
-		while((tmp = br.read()) != -1) {
+		while((tmp = reader.read()) != -1) {
 			char _c = (char)tmp;
 			boolean exist = false;
 			for(char c : chars) {
@@ -311,9 +317,9 @@ public class JObject {
 		throw new UnexpectedEndException();
 	}
 
-	protected char read(BufferedReader br, StringBuilder sb, char... stopChs) throws Exception {
+	protected char read(Reader reader, StringBuilder sb, char... stopChs) throws Exception {
 		int tmp;
-		while((tmp = br.read()) != -1) {
+		while((tmp = reader.read()) != -1) {
 			char c = (char)tmp;
 			for(char stopCh : stopChs) {
 				if(stopCh == c) {
@@ -325,15 +331,15 @@ public class JObject {
 		throw new UnexpectedEndException();
 	}
 
-	protected char readStr(BufferedReader br, StringBuilder sb) throws Exception {
+	protected char readStr(Reader reader, StringBuilder sb) throws Exception {
 		char lastCh = 0x00;
 		int tmp;
-		while((tmp = br.read()) != -1) {
+		while((tmp = reader.read()) != -1) {
 			char c = (char)tmp;
 			if(null != ei) {
 				if('\\' == lastCh) {
 					if('u' == c) {
-						c = (char)Long.parseLong("" + (char)br.read() + (char)br.read() + (char)br.read() + (char)br.read(), 0x10);
+						c = (char)Long.parseLong("" + (char)reader.read() + (char)reader.read() + (char)reader.read() + (char)reader.read(), 0x10);
 					}
 					else {
 						c = ei.unescape(c);
@@ -367,8 +373,7 @@ public class JObject {
 
 	void writePrefix(OutputStream os) throws IOException {
 		if(null != id) {
-			StringBuilder sb = new StringBuilder().append(QUOT_MARK).append(escape(id)).append(QUOT_MARK).append(DELIMETER);
-			os.write(sb.toString().getBytes("UTF-8"));
+			os.write((QUOT_MARK + escape(id) + QUOT_MARK + DELIMETER).getBytes("UTF-8"));
 		}
 	}
 	void writePostfix(OutputStream os) throws IOException {
@@ -382,8 +387,7 @@ public class JObject {
 		}
 		else {
 			if(null != id) {
-				StringBuilder sb = new StringBuilder().append(QUOT_MARK).append(escape(id)).append(QUOT_MARK).append(DELIMETER);
-				os.write(sb.toString().getBytes("UTF-8"));
+				os.write((QUOT_MARK + escape(id) + QUOT_MARK + DELIMETER).getBytes("UTF-8"));
 			}
 			os.write(OPEN_BRACKET);
 			if(!jitems.isEmpty()) {
